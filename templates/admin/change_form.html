@@ -1,0 +1,392 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static admin_modify suit_tags admin_urls %}
+{% load url from future %}
+
+{% block extrahead %}{{ block.super }}
+    {% url 'admin:jsi18n' as jsi18nurl %}
+    <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
+
+    {{ media }}
+    <script src="https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
+{% endblock %}
+
+
+{% block extrajs %}
+    {{ block.super }}
+
+
+    {% if 'CONFIRM_UNSAVED_CHANGES'|suit_conf %}
+        <!-- Warn on leaving unsaved form -->
+        <script src="{% static 'suit/js/suit-form-confirm.js' %}"></script>
+        <script type="text/javascript">
+            confirmExitIfModified('{{ opts.module_name }}_form', '{% trans 'You have unsaved changes' %}.');
+        </script>
+    {% endif %}
+
+    {% if adminform.model_admin.suit_form_tabs %}
+        <script type="text/javascript">
+            (function ($) {
+                $(function () {
+                    $('#suit_form_tabs').suit_form_tabs();
+                });
+            }(Suit.$))
+        </script>
+    {% endif %}
+
+    <script>
+        (function ($) {
+            $(function () {
+                $("#{{ opts.module_name }}_form").suit_form_debounce();
+            });
+        }(Suit.$))
+    </script>
+
+
+    <script type="text/javascript">
+
+        // Get a reference to the presence data in Firebase.
+        var userActionsListRef = new Firebase("https://q04e2dno36u.firebaseio-demo.com/{{ request.path }}/actions/");
+        var connectedRef = new Firebase("https://q04e2dno36u.firebaseio-demo.com//.info/connected");
+        var userListRef = new Firebase("https://q04e2dno36u.firebaseio-demo.com/{{ request.path }}/users/");
+        var myUserRef = userListRef.push();
+
+        var browserUserName = "{{ request.user.get_full_name }}";
+        var refresh = false;
+
+        function getMessageId(snapshot) {
+            return snapshot.key().replace(/[^a-z0-9\-\_]/gi,'');
+        }
+
+        function generateActiveUserArea(){
+            $('<h5 class="italic-title">Users editing this page</h5>' +
+                    '<ul id="active-users" class="box menu-box"></ul>').insertAfter('.save-box');
+        }
+
+        function serializeObject(obj) {
+            var o = {};
+            var a = obj.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push)
+                        o[this.name] = [o[this.name]];
+                    o[this.name].push(this.value || '');
+                } else
+                    o[this.name] = this.value || '';
+            });
+            return o;
+        };
+
+        connectedRef.on('value', function(isOnline) {
+            if (isOnline.val()){
+                myUserRef.onDisconnect().remove();
+                myUserRef.set({ name: "{{ request.user.get_full_name }}", connectionTime: Date.now() });
+            }
+        });
+
+        userListRef.on("child_added", function(snapshot) {
+            var user = snapshot.val();
+
+            $("<li>").attr("id", getMessageId(snapshot))
+            .html('<a href="#" class="historylink">' + user.name + "</a>")
+            .appendTo("#active-users").hide().show('normal');
+        });
+
+        // Update our GUI to remove the status of a user who has left.
+        userListRef.on("child_removed", function(snapshot) {
+            $("#active-users").children("#" + getMessageId(snapshot)).remove();
+        });
+
+        $( "#content form" ).submit(function( event ) {
+            userListRef.on('value', function(snapshot){
+                var count = 0;
+                var users = snapshot.val();
+                for (var key in users) {
+                    if (users.hasOwnProperty(key))
+                        count++;
+                }
+
+                if(count > 1)
+                    userActionsListRef.set({action1: {name: "{{ request.user.get_full_name }}", actionType: 'saved' }})
+            });
+
+
+            userActionsListRef.orderByChild('actionType').equalTo('changed').once('value',function(snap){
+                var changeAction = snap.val();
+
+                if(changeAction.action2.name === browserUserName)
+                    userActionsListRef.child('action2').remove();
+            });
+
+            localStorage.removeItem('{{ request.path }}');
+        });
+        userActionsListRef.on("child_added", function(snapshot) {
+            var action = snapshot.val();
+
+            if(action.actionType == 'saved' && action.name !== browserUserName && !refresh){
+                $(":submit").attr('disabled','disabled');
+                $('<div class="alert alert-danger alert-dismissible fade in">'+
+                        '<button class="close" data-dismiss="alert">×</button>' +
+                        'A change was made <br/>by <strong>' + action.name + '</strong>' +
+                        '<br/>please <a href="">refresh</a></div>').insertBefore(".save-box");
+
+                var action = new Firebase("https://q04e2dno36u.firebaseio-demo.com/{{ request.path }}/actions/action1");
+
+                refresh = true;
+                action.remove();
+            }
+        });
+
+        $(function() {
+            generateActiveUserArea();
+
+            var globalForm = $("#content form").clone();
+
+            userActionsListRef.orderByChild('actionType').equalTo('changed').once('value',function(snap){
+                var action = snap.val();
+
+                if(action.action2.actionType === 'changed' && action.action2.name === browserUserName)
+                    $("#content-main").prepend('<div class="alert alert-information alert-block" id="undo-area"> ' +
+                            '<button class="close" data-dismiss="alert">×</button>' +
+                            'There are changes, if you want to retrieve please click, ' +
+                            '<a style="cursor:pointer" id="undo">undo</a></div>');
+
+                $("#undo").click(function(e){
+                    $("#undo-area").fadeOut(50);
+                    var formJson = JSON.parse(action.action2.data);
+                    delete formJson['csrfmiddlewaretoken'];
+
+                    if(localStorage.getItem('{{ request.path }}') !== null){
+                        var recoveryData = JSON.parse(localStorage.getItem('{{ request.path }}'));
+
+                        $.each(recoveryData, function(i, recovery){
+                            $("<tr></tr>").addClass(recovery.className)
+                            .attr('id', recovery.idName)
+                            .html(recovery.html)
+                            .insertBefore("#"+recovery.target + " tbody tr.add-row");
+                        });
+                    }
+
+                    for(var key in formJson){
+                        var input = $("input[name='" + key + "']");
+                        var select = $("select[name='" + key + "']");
+                        var textarea = $("textarea[name='" + key + "']");
+                        var radio = $("input:radio[name='" + key + "']");
+
+                        if(textarea.length > 0)
+                            input = textarea;
+
+                        if(input.length > 0){
+                            if(input[0].type === 'checkbox'){
+                                if(formJson[key] === 'on')
+                                    input.attr("checked",true);
+                            }
+
+                            input.val(formJson[key]);
+                        }
+                        else if(select.length > 0) {
+                            select.val(formJson[key]);
+                            select.attr('selected', true);
+                        }
+                        else if(radio.length > 0)
+                            radio.filter('[value='+formJson[key]+']').prop('checked', true);
+
+                    }
+                });
+            });
+
+            var storageForm = { name: '{{ request.path }}', data: [] };
+
+            function inputChangeListener(e) {
+                var formData = e.target.closest("form");
+                var matchingInput = globalForm.find(e.target.tagName.toLowerCase()+'[name="'+ e.target.name +'"]');
+
+                if (matchingInput.length === 0){
+                    var appendNode = e.target.closest(".inline-group").id;
+                    var appendThing = e.target.closest("tr").innerHTML;
+                    var selectorName = e.target.name;
+
+                    var changedData = {
+                        target: appendNode,
+                        html: appendThing,
+                        name: selectorName,
+                        className: e.target.closest("tr").className,
+                        idName: e.target.closest("tr").id
+                    };
+
+                    var findItem = false;
+                    $.each(storageForm.data, function(i,v){
+                        if(v.name === selectorName){
+                            findItem = true;
+                            storageForm.data[i] = changedData;
+                        }
+                    });
+
+                    if(!findItem) storageForm.data.push(changedData);
+
+                    localStorage.setItem(storageForm.name, JSON.stringify(storageForm.data));
+                }
+
+                var serializeData = JSON.stringify(serializeObject($(formData)));
+
+                var action = {
+                    name: "{{ request.user.get_full_name }}",
+                    actionType: 'changed',
+                    data: serializeData
+                };
+
+                userActionsListRef.set({action2: action});
+            }
+
+            $('body').on('change focus blur', 'input, select, textarea',  inputChangeListener);
+
+        });
+    </script>
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content_title_value %}
+    {% trans 'Add' %} {{ opts.verbose_name }}
+{% endblock %}
+
+{% block coltype %}{% if ordered_objects %}colMS{% else %}colM{% endif %}{% endblock %}
+
+{% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <ul class="breadcrumb">
+            <li>
+                <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+                <span class="divider">&raquo;</span>
+            </li>
+            <li>
+                <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ app_label|capfirst|escape }}</a>
+                <span class="divider">&raquo;</span>
+            </li>
+            <li>
+                {% if has_change_permission %}
+                    <a href="{% url opts|admin_urlname:'changelist' %}">
+                        {{ opts.verbose_name_plural|capfirst }}</a>{% else %}
+                    {{ opts.verbose_name_plural|capfirst }}{% endif %}
+                <span class="divider">&raquo;</span>
+            </li>
+            <li class="active">
+                {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}
+            </li>
+        </ul>
+    {% endblock %}
+{% endif %}
+
+{% block content %}
+    <div id="content-main" class="inner-two-columns">
+
+        <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post"
+              id="{{ opts.module_name }}_form" class="form-horizontal">
+
+            <div class="inner-right-column">
+
+                <div class="box save-box">
+
+                    {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+
+                </div>
+
+                {% block object-tools %}
+                    <div id="presenceDiv" class="l-demo-container example-base"></div>
+                    {% if change %}{% if not is_popup %}
+                        <h4 class="italic-title">{% trans 'tools'|capfirst %}</h4>
+                        <ul class="box menu-box">
+                            {% block object-tools-items %}
+                                <li><a href="history/" class="historylink"><i
+                                        class="icon-time icon-alpha75"></i>{% trans "History" %}</a>
+                                </li>
+                                {% if has_absolute_url %}
+                                    <li>
+                                        <a href="../../../r/{{ content_type_id }}/{{ object_id }}/"
+                                           class="viewsitelink"><i class="icon-eye-open icon-alpha75"></i>{% trans "View on site" %}
+                                        </a></li>
+                                {% endif %}
+
+                                {% if has_add_permission %}
+                                    <li>
+                                        <a href="../add/"><i class="icon-plus-sign icon-alpha75"></i>{% blocktrans with opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+                                        </a></li>
+                                    {# {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a>#}
+                                {% endif %}
+
+                            {% endblock %}
+                        </ul>
+                    {% endif %}{% endif %}
+                {% endblock %}
+
+                {% block sidebar %}{% endblock %}
+
+            </div>
+            <div class="inner-center-column">
+                {% csrf_token %}{% block form_top %}{% endblock %}
+                {% block suit_form_tabs %}
+                    {% if adminform.model_admin.suit_form_tabs %}
+                        <ul id="suit_form_tabs" class="nav nav-tabs nav-tabs-suit" data-tab-prefix="suit-tab">
+                            {% for tab in adminform.model_admin.suit_form_tabs %}
+                                <li><a href="#{{ tab.0 }}">{{ tab.1 }}</a></li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endblock %}
+                <div class="tab-content tab-content-main">
+                    {% if is_popup %}
+                        <input type="hidden" name="_popup" value="1"/>{% endif %}
+                    {% if errors %}
+                        <div class="alert alert-error">
+                            {% blocktrans count counter=errors|length %}Please correct the error below.{% plural %} Please correct the errors below.{% endblocktrans %}
+                            {{ adminform.form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {# render suit_form_includes at top position #}
+                    {% include 'suit/includes/change_form_includes.html' with position='top' %}
+
+                    {% block field_sets %}
+                        {% for fieldset in adminform %}
+                            {% include "admin/includes/fieldset.html" %}
+                        {% endfor %}
+                    {% endblock %}
+
+                    {% block after_field_sets %}{% endblock %}
+
+                    {# render suit_form_includes at middle position #}
+                    {% include 'suit/includes/change_form_includes.html' with position='middle' %}
+
+                    {% block inline_field_sets %}
+                        {% for inline_admin_formset in inline_admin_formsets %}
+                            {% include inline_admin_formset.opts.template %}
+                        {% endfor %}
+                    {% endblock %}
+
+                </div>
+
+                {% block after_related_objects %}{% endblock %}
+
+                {# render suit_form_includes at last position #}
+                {% include 'suit/includes/change_form_includes.html' with position='bottom' %}
+
+                {% if adminform and add %}
+                    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
+                {% endif %}
+
+                {# JavaScript for prepopulated fields #}
+                {% prepopulated_fields_js %}
+
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+
+{# Empty centered sidebar as now we use sidebar in content block#}
+{% block sidebar_content %}{% endblock %}
+
+
+
