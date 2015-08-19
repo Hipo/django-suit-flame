@@ -8,9 +8,9 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='django-suit-flame',
+    name='django_suit_flame',
     version='0.1',
-    packages=['django-suit-flame',
+    packages=['django_suit_flame',
               ],
     include_package_data=True,
     license='License',  # example license
