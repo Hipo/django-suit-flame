@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static admin_modify suit_tags admin_urls %}
+{% load i18n admin_static admin_modify suit_tags admin_urls firebase_settings %}
 {% load url from future %}
 
 {% block extrahead %}{{ block.super }}
@@ -43,12 +43,18 @@
 
 
     <script type="text/javascript">
-
         // Get a reference to the presence data in Firebase.
-        var userActionsListRef = new Firebase("https://q04e2dno36u.firebaseio-demo.com/{{ request.path }}/actions/");
-        var connectedRef = new Firebase("https://q04e2dno36u.firebaseio-demo.com//.info/connected");
-        var userListRef = new Firebase("https://q04e2dno36u.firebaseio-demo.com/{{ request.path }}/users/");
+        var userActionsListRef = new Firebase("{% get_flame_subdomain %}{{ request.path }}actions/");
+        var connectedRef = new Firebase("{% get_flame_subdomain %}/.info/connected");
+        var userListRef = new Firebase("{% get_flame_subdomain %}{{ request.path }}users/");
         var myUserRef = userListRef.push();
+
+        userActionsListRef.authWithCustomToken("{% get_flame_token request.user.id %}", function(error, authData) {
+            if (error)
+                alert("Please check firebase's api key");
+        },{
+            remember: "sessionOnly" {# To limit persistence to the lifetime of the current window, set this to sessionOnly #}
+        });
 
         var browserUserName = "{{ request.user.get_full_name }}";
         var refresh = false;
@@ -119,6 +125,7 @@
 
             localStorage.removeItem('{{ request.path }}');
         });
+
         userActionsListRef.on("child_added", function(snapshot) {
             var action = snapshot.val();
 
@@ -129,7 +136,7 @@
                         'A change was made <br/>by <strong>' + action.name + '</strong>' +
                         '<br/>please <a href="">refresh</a></div>').insertBefore(".save-box");
 
-                var action = new Firebase("https://q04e2dno36u.firebaseio-demo.com/{{ request.path }}/actions/action1");
+                var action = new Firebase("{% get_flame_subdomain %}{{ request.path }}actions/action1");
 
                 refresh = true;
                 action.remove();
@@ -237,7 +244,10 @@
                 userActionsListRef.set({action2: action});
             }
 
-            $('body').on('change focus blur', 'input, select, textarea',  inputChangeListener);
+            var auto_save = "{% check_flame_autosave %}";
+
+            if(auto_save == 'True')
+                $('body').on('change focus blur', 'input, select, textarea',  inputChangeListener);
 
         });
     </script>
@@ -387,6 +397,5 @@
 
 {# Empty centered sidebar as now we use sidebar in content block#}
 {% block sidebar_content %}{% endblock %}
-
 
 
