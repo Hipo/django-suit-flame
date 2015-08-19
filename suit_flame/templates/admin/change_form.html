@@ -154,8 +154,8 @@
                 if(action.action2.actionType === 'changed' && action.action2.name === browserUserName)
                     $("#content-main").prepend('<div class="alert alert-information alert-block" id="undo-area"> ' +
                             '<button class="close" data-dismiss="alert">×</button>' +
-                            'There are changes, if you want to retrieve please click, ' +
-                            '<a style="cursor:pointer" id="undo">undo</a></div>');
+                            'There are unsaved changes, if you want to apply them on this form, please click ' +
+                            '<a style="cursor:pointer" id="undo">here</a>.</div>');
 
                 $("#undo").click(function(e){
                     $("#undo-area").fadeOut(50);

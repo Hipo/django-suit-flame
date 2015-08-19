@@ -36,12 +36,12 @@ The user can choose to apply the changes to the form or ignore (and delete) this
 pip install django-suit-flame
 ```
 
-Add suit_flame *below* django-suit into the INSTALLED_APPS setting
+Add suit_flame *before* django-suit into the INSTALLED_APPS setting
 
 ```
 INSTALLED_APPS = (
-    'suit',
     'suit_flame',
+    'suit',
 ```
 
 
