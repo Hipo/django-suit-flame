@@ -20,9 +20,16 @@ Flame uses Firebase as the pub-sub provider. Firebase is quite reliable and the 
 
 # Setting-up
 
+```
 pip install django-suit-flame
+```
 
 add django-suit-flame *below* django-suit
+
+```
+
+```
+
 
 add necessary firebase keys:
 
