@@ -134,7 +134,7 @@
                 $('<div class="alert alert-danger alert-dismissible fade in">'+
                         '<button class="close" data-dismiss="alert">×</button>' +
                         'A change was made <br/>by <strong>' + action.name + '</strong>' +
-                        '<br/>please <a href="">refresh</a></div>').insertBefore(".save-box");
+                        '<br/>please backup your changes and <a href="">refresh</a> the page in order to not override their changes.</div>').insertBefore(".save-box");
 
                 var action = new Firebase("{% get_flame_subdomain %}{{ request.path }}actions/action1");
 
