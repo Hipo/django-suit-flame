@@ -26,8 +26,10 @@ add django-suit-flame *below* django-suit
 
 add necessary firebase keys:
 
-FLAME_FIREBASE_SUBDOMAIN = ""
-FLAME_FIREBASE_SECRET_KEY = ""
+FLAME_AUTOSAVE = True
+FLAME_FIREBASE_SUBDOMAIN = 'https://scorching-inferno-136.firebaseio.com'
+FLAME_FIREBASE_SECRET_KEY = 'z22bA3KOg54gfwr9lmoWyi1sg8dL8uwOg8txRyfl2'
+
 
 ### Additional settings
 

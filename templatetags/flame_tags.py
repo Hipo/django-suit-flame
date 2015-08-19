@@ -10,20 +10,20 @@ def check_flame_autosave():
 
 @register.simple_tag
 def get_flame_subdomain():
+    """
+    Returns the firebase subdomain from settings.
+
+    Example:
+        FLAME_FIREBASE_SUBDOMAIN = 'https://scorching-inferno-136.firebaseio.com'
+
+    """
     return settings.FLAME_FIREBASE_SUBDOMAIN
 
 @register.simple_tag
 def get_flame_token(uid):
+    """
+    Creates a public key using the user id and the secret key.
+    FLAME_FIREBASE_SECRET_KEY = 'z22bA3KOg54gfwr9lmoWyi1sg8dL8uwOg8txRyfl2'
+    """
     token = create_token(settings.FLAME_FIREBASE_SECRET_KEY, {"uid": str(uid)})
-
     return token
-
-@register.simple_tag
-def get_flame_secret_key():
-    return settings.FLAME_FIREBASE_SECRET_KEY
-
-
-# settings.py
-# FLAME_AUTOSAVE = True
-# FLAME_FIREBASE_SUBDOMAIN = 'https://scorching-inferno-9092.firebaseio.com'
-# FLAME_FIREBASE_SECRET_KEY = 'z8lbA3KOIX9tZg9lmoWyi1sg8dL8uwOg8UxRyflO'
