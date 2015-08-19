@@ -18,31 +18,6 @@ Use a pub-sub server to track active users and notify others when a change occur
 
 Flame uses Firebase as the pub-sub provider. Firebase is quite reliable and the free tier already supports up to 50 connections which should be enough for an admin page. 
 
-# Setting-up
-
-```
-pip install django-suit-flame
-```
-
-add django-suit-flame *below* django-suit
-
-```
-
-```
-
-
-add necessary firebase keys:
-
-FLAME_AUTOSAVE = True
-FLAME_FIREBASE_SUBDOMAIN = 'https://scorching-inferno-136.firebaseio.com'
-FLAME_FIREBASE_SECRET_KEY = 'z22bA3KOg54gfwr9lmoWyi1sg8dL8uwOg8txRyfl2'
-
-
-### Additional settings
-
-If you want to stop the autosave functionality, change this setting
-FLAME_AUTOSAVE = True
-
 # Other Features
 ## Autosave!
 
@@ -54,6 +29,30 @@ Flame syncs the contents of the change form regularly with Firebase. When the us
 However if the user leaves the page without saving the form, the data stays at the page. 
 When the user re-enters to that page, he sees a notification box that says "You have unsaved changes" 
 The user can choose to apply the changes to the form or ignore (and delete) this content forever.
+
+# Setting-up
+
+```
+pip install django-suit-flame
+```
+
+Add suit_flame *below* django-suit into the INSTALLED_APPS setting
+
+```
+INSTALLED_APPS = (
+    'suit',
+    'suit_flame',
+```
+
+
+Add necessary setting keys to the settings.py:
+
+```
+FLAME_AUTOSAVE = True
+FLAME_FIREBASE_SUBDOMAIN = 'https://scorching-inferno-136.firebaseio.com'
+FLAME_FIREBASE_SECRET_KEY = 'z22bA3KOg54gfwr9lmoWyi1sg8dL8uwOg8txRyfl2'
+```
+
 
 
 Made by Hipo

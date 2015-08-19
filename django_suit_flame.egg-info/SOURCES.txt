@@ -1,6 +1,0 @@
-setup.cfg
-setup.py
-django_suit_flame.egg-info/PKG-INFO
-django_suit_flame.egg-info/SOURCES.txt
-django_suit_flame.egg-info/dependency_links.txt
-django_suit_flame.egg-info/top_level.txt

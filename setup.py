@@ -12,7 +12,7 @@ install_requires = [
 ]
 
 setup(
-    name='django-suit-flame',
+    name='suit-flame',
     version='0.1',
     packages=['django_suit_flame'],
     include_package_data=True,
