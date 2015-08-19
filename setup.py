@@ -14,7 +14,7 @@ install_requires = [
 setup(
     name='suit-flame',
     version='0.1',
-    packages=['django_suit_flame'],
+    packages=['suit_flame'],
     include_package_data=True,
     license='BSD License',  # example license
     description='See active users & autosave changes at django admin.',
