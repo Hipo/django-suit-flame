@@ -14,15 +14,17 @@ Flame is the simplest solution to prevent this problem.
 
 Use a pub-sub server to track active users and notify others when a change occurs.
 
-### No need to set-up Tornado or similar pub-sub server.
+![save-notification](/docs/images/save-notification.png)
 
-Flame uses Firebase as the pub-sub provider. Firebase is quite reliable and the free tier already supports up to 50 connections which should be enough for an admin page. 
-
-# Other Features
 ## Autosave!
 
 Many people are using django as CMS or content editing purposes. The biggest nightmare for an editor is to accidentally close the browser and lose all the data he wrote. 
 The modern web apps (Gmail, Google docs, etc...) already support auto-save and many users complaint and suffer from this missing feature with sites built with django.
+
+#### No need to set-up Tornado or similar pub-sub server.
+
+Flame uses Firebase as the pub-sub provider. Firebase is quite reliable and the free tier already supports up to 50 connections which should be enough for an admin page. 
+
 
 ### How it works?
 Flame syncs the contents of the change form regularly with Firebase. When the user saves the form, it deletes this data from firebase.
@@ -45,7 +47,7 @@ INSTALLED_APPS = (
 ```
 
 
-Add necessary setting keys to the settings.py:
+Create a new firebase database and add necessary keys to the settings.py:
 
 ```
 FLAME_AUTOSAVE = True
