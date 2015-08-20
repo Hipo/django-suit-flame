@@ -53,6 +53,19 @@ FLAME_FIREBASE_SUBDOMAIN = 'https://example-subdomain-136.firebaseio.com'
 FLAME_FIREBASE_SECRET_KEY = 'e22bA3KOg54gfwr9lmoWyi1sg8dL8uwOg8txRyfl2'
 ```
 
+Make sure to make necessary security settings at firebase.
 
+Go to your firebase project settings and update the Security & Rules section with these ones:
+
+```
+{
+    "rules": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+    }
+}
+```
+
+This will ensure the privacy of your contents.
 
 Made by Hipo
