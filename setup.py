@@ -18,8 +18,8 @@ setup(
     include_package_data=True,
     license='BSD License',  # example license
     description='See active users & autosave changes at django admin.',
-    long_description=README,
     author='hipo',
+    url='https://github.com/hipo/django-suit-flame',
     author_email='pypi@hipolabs.com',
     classifiers=[
         'Environment :: Web Environment',

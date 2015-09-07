@@ -3,11 +3,13 @@
 Solves two problems:
 
  - Warns users when two people are editing the same object. 
- - Autosaves the changes to firebase realtime and notifies the user if there are unsaved changes. If the user leaves the page for some reason, they can see their unsaved changes and apply them to the form.
+ - Autosaves the changes to firebase realtime and notifies the user if there are unsaved changes. 
+ If the user leaves the page for some reason, they can see their unsaved changes and apply them to the form.
  
 ## The main problem
 
-When two users are editing the same django admin page at the same time, it is almost inevitable that one of the users will will override the other’s changes. 
+When two users are editing the same django admin page at the same time, it is almost inevitable that one of the users 
+will will override the other's changes. 
 Flame is the simplest solution to prevent this problem. 
 
 ## The solution
