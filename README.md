@@ -18,8 +18,10 @@ Use a pub-sub server to track active users and notify others when a change occur
 
 ## Autosave!
 
-Many people are using django as CMS or content editing purposes. The biggest nightmare for an editor is to accidentally close the browser and lose all the data he wrote. 
-The modern web apps (Gmail, Google docs, etc...) already support auto-save and many users complaint and suffer from this missing feature with sites built with django.
+Many people use django for content editing purposes. The biggest nightmare for an editor is to accidentally 
+close the browser and lose all his work. 
+The modern web apps (Gmail, Google docs, etc...) already support auto-save and lack of this feature in sites built with django create a bad 
+experience for the users.
 
 #### No need to set-up Tornado or similar pub-sub server.
 
@@ -28,7 +30,7 @@ Flame uses Firebase as the pub-sub provider. Firebase is quite reliable and the 
 
 ### How it works?
 Flame syncs the contents of the change form regularly with Firebase. When the user saves the form, it deletes this data from firebase.
-However if the user leaves the page without saving the form, the data stays at the page. 
+However if the user leaves the page without saving the form, the unsaved data stays at the page. 
 When the user re-enters to that page, he sees a notification box that says "You have unsaved changes" 
 The user can choose to apply the changes to the form or ignore (and delete) this content forever.
 
@@ -70,4 +72,8 @@ Go to your firebase project settings and update the Security & Rules section wit
 
 This will ensure the privacy of your contents.
 
-Made by Hipo
+# Contributors
+ -  [Umit Dincel](https://github.com/umitdincel)
+ -  [Yigit Guler](https://github.com/yigitguler)
+
+Made by [Hipo](http://hipolabs.com)
