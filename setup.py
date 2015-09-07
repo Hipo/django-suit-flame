@@ -13,7 +13,7 @@ install_requires = [
 
 setup(
     name='suit-flame',
-    version='0.1',
+    version='0.1.1',
     packages=['suit_flame', 'suit_flame.templatetags'],
     include_package_data=True,
     license='BSD License',  # example license
